@@ -318,8 +318,8 @@ impl<'a> InnerToken<'a> {
 }
 
 #[derive(Debug, Clone, Copy, Sequence, Hash, Eq, PartialEq)]
-/// Enumeration of the supported Schemes. They are use to indicate how we are supposed to parse and
-/// chunk the different tokens.
+/// Enumeration of the supported Schemes. They are used to indicate how we are
+/// supposed to parse and chunk the different tokens.
 #[derive(Default)]
 pub enum SchemeType {
     IOB1,

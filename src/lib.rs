@@ -1,4 +1,4 @@
-use crate::entity::schemes::{InnerToken, Token, UserPrefix};
+use crate::schemes::{InnerToken, InvalidToken, ParsingError, Token, UserPrefix};
 use ahash::AHashSet;
 use flatarray::FlatArray;
 use std::{
@@ -15,17 +15,18 @@ mod autodetect;
 mod schemes;
 
 // Re-exporting
-pub use schemes::{InvalidToken, ParsingError, SchemeType};
+pub use schemes::SchemeType;
 
-/// An entity represent a named objet in named entity recognition (NER). It contains a start and an
-/// end(i.e. at what index of the list does it starts and ends) and a tag, which the associated
-/// entity (such as `LOC`, `NAME`, `PER`, etc.). It is important to note that the `end` field
-/// differ from the value used in SeqEval when `strict = false`.
+/// An entity represent a named objet in named entity recognition (NER). It
+/// contains a start and an end(i.e. at what index of the list does it starts
+/// and ends) and a tag, which the associated entity (such as `LOC`, `NAME`,
+/// `PER`, etc.). It is important to note that the `end` field differ from the
+/// value used in SeqEval when `strict = false`.
 #[derive(Debug, Hash, Clone, PartialEq, Eq, PartialOrd)]
 pub struct Entity<'a> {
-    pub(crate) start: usize,
-    pub(crate) end: usize,
-    pub(crate) tag: &'a str,
+    pub start: usize,
+    pub end: usize,
+    pub tag: &'a str,
 }
 
 impl<'a> Entity<'a> {
@@ -42,10 +43,10 @@ impl Display for Entity<'_> {
 
 /// Leniently retrieves the entities from a sequence.
 #[inline(always)]
-pub(crate) fn get_entities_lenient<'a>(
+pub fn get_entities_lenient<'a>(
     sequence: &'a FlatArray<&'a str>,
     suffix: bool,
-) -> Result<Entities<'a>, ParsingError<String>> {
+) -> Result<Entities<'a>, NamedEntityError> {
     let mut res = Vec::with_capacity(sequence.len() / 2);
     let mut indices = Vec::with_capacity(sequence.len() / 2);
     indices.push(0);
@@ -57,7 +58,6 @@ pub(crate) fn get_entities_lenient<'a>(
         }
     }
     Ok(Entities(FlatArray::from_raw(res, indices)))
-    o
 }
 
 /// This wrapper around the content iterator appends a single `"O"` at the end of its inner
@@ -499,7 +499,7 @@ impl<S: AsRef<str> + Debug> Error for ConversionError<S> {}
 #[derive(Debug, PartialEq, Clone)]
 /// Entites are the unique tokens contained in a sequence. Entities can be built with the
 /// TryFromVec trait. This trait allows to collect from a vec
-pub(crate) struct Entities<'a>(FlatArray<Entity<'a>>);
+pub struct Entities<'a>(FlatArray<Entity<'a>>);
 
 impl<'a> Deref for Entities<'a> {
     type Target = FlatArray<Entity<'a>>;
@@ -520,10 +520,41 @@ impl<'a> Entities<'a> {
     }
 }
 
-/// This trait mimics the TryFrom trait from the std lib. It is used
-/// to *try* to build an Entities structure. It can fail if there is a
+#[derive(Debug)]
+pub enum NamedEntityError {
+    ConversionError(ConversionError<String>),
+    ParsingError(ParsingError<String>),
+}
+impl From<ParsingError<String>> for NamedEntityError {
+    fn from(value: ParsingError<String>) -> Self {
+        Self::ParsingError(value)
+    }
+}
+impl From<ConversionError<String>> for NamedEntityError {
+    fn from(value: ConversionError<String>) -> Self {
+        Self::ConversionError(value)
+    }
+}
+impl Display for NamedEntityError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::ConversionError(ce) => <ConversionError<String> as Display>::fmt(ce, f),
+            Self::ParsingError(pe) => <ParsingError<String> as Display>::fmt(pe, f),
+        }
+    }
+}
+
+#[inline(always)]
+pub fn get_entities_strict<'a>(
+    sequence: &'a mut FlatArray<&'a str>,
+    scheme: SchemeType,
+    suffix: bool,
+) -> Result<Entities<'a>, NamedEntityError> {
+    Entities::try_from_strict(sequence, scheme, suffix).map_err(NamedEntityError::from)
+}
+
+/// It is used to *try* to build an Entities structure. Itcan fail if there is a
 /// malformed token in `tokens`.
-///
 /// * `tokens`: Vector containing the raw tokens.
 /// * `scheme`: The scheme type to use (ex: IOB2, BILOU, etc.). The
 ///    supported scheme are the variant of SchemeType.
@@ -532,6 +563,15 @@ impl<'a> Entities<'a> {
 ///    end of the token.
 /// * ` `: The character used separate the Tag from the Prefix
 ///    (ex: `I-PER`, where the tag is `PER` and the prefix is `I`)
+impl<'a> TryFrom<(&'a mut FlatArray<&'a str>, SchemeType, bool)> for Entities<'a> {
+    type Error = ConversionError<String>;
+    fn try_from(
+        value: (&'a mut FlatArray<&'a str>, SchemeType, bool),
+    ) -> Result<Self, Self::Error> {
+        Entities::try_from_strict(value.0, value.1, value.2)
+    }
+}
+
 pub(crate) trait TryFromVecStrict<'a> {
     type Error: Error;
     fn try_from_strict(
@@ -611,7 +651,7 @@ impl<'a> Entities<'a> {
 }
 
 #[cfg(test)]
-pub(super) mod tests {
+mod tests {
 
     use super::*;
     use enum_iterator::{all, Sequence};

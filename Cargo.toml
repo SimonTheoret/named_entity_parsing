@@ -3,5 +3,12 @@ name = "named_entity"
 version = "0.1.0"
 edition = "2021"
 
+[lib]
+
 [dependencies]
 ahash = "0.8.11"
+enum-iterator = "2.1.0"
+flatarray = "0.6.0"
+
+[dev-dependencies]
+quickcheck = "1.0.3"
