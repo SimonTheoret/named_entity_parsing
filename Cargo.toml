@@ -3,6 +3,10 @@ name = "named_entity_parsing"
 version = "0.1.0"
 edition = "2021"
 license = "MIT"
+description = "Named entity parser. Used in Rusev to parse a list of tokens into a list of entities."
+repository = "https://github.com/SimonTheoret/named_entity_parsing"
+keywords = ["SeqEval", "NLP", "NER"]
+categories = ["science", "text-processing"]
 
 [lib]
 
