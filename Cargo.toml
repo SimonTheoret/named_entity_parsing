@@ -1,5 +1,5 @@
 [package]
-name = "named_entity"
+name = "named_entity_parsing"
 version = "0.1.0"
 edition = "2021"
 
