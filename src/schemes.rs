@@ -124,7 +124,7 @@ impl Prefix {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Could not parse the string into a `Prefix`
 pub enum ParsingError<S: AsRef<str>> {
     PrefixError(S),
@@ -331,7 +331,7 @@ pub enum SchemeType {
     BILOU,
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 /// Encountered an invalid token when parsing the entities.
 pub struct InvalidToken(pub String);
 

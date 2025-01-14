@@ -453,7 +453,7 @@ impl<'a> EntitiesIter<'a> {
     }
 }
 
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 /// Enum of errors wrapping the actual error structs.
 pub enum ConversionError<S: AsRef<str>> {
     /// Invalid token encoutered when
@@ -520,7 +520,7 @@ impl<'a> Entities<'a> {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq, Eq, Clone)]
 pub enum NamedEntityError {
     ConversionError(ConversionError<String>),
     ParsingError(ParsingError<String>),
