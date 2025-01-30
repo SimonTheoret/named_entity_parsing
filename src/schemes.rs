@@ -331,6 +331,31 @@ pub enum SchemeType {
     BILOU,
 }
 
+#[derive(Debug, Clone, PartialEq, Eq, Ord, PartialOrd)]
+pub struct SchemeTypeParsingError(String);
+
+impl Display for SchemeTypeParsingError {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "Could not parse {} into a SchemeType", self.0)
+    }
+}
+impl Error for SchemeTypeParsingError {}
+
+impl FromStr for SchemeType {
+    type Err = SchemeTypeParsingError;
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        match s.to_lowercase().as_ref() {
+            "iob1" => Ok(Self::IOB1),
+            "iob2" => Ok(Self::IOB2),
+            "ioe1" => Ok(Self::IOE1),
+            "ioe2" => Ok(Self::IOE2),
+            "iobes" => Ok(Self::IOBES),
+            "bilou" => Ok(Self::BILOU),
+            _ => Err(SchemeTypeParsingError(String::from(s))),
+        }
+    }
+}
+
 #[derive(Debug, Clone, PartialEq, Eq)]
 /// Encountered an invalid token when parsing the entities.
 pub struct InvalidToken(pub String);
