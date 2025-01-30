@@ -58,24 +58,16 @@ static ALLOWED_BILOU_PREFIXES: LazyLock<[AHashSet<UserPrefix>; 9]> = LazyLock::n
         AHashSet::from([UserPrefix::U]),
     ]
 });
-// allowed_bilou_prefixes = [
-//     {Prefix.I, Prefix.O, Prefix.B, Prefix.L, Prefix.U},
-//     {Prefix.I, Prefix.B, Prefix.L, Prefix.U},
-//     {Prefix.I, Prefix.O, Prefix.B, Prefix.L},
-//     {Prefix.O, Prefix.B, Prefix.L, Prefix.U},
-//     {Prefix.I, Prefix.B, Prefix.L},
-//     {Prefix.B, Prefix.L, Prefix.U},
-//     {Prefix.O, Prefix.B, Prefix.L},
-//     {Prefix.B, Prefix.L},
-//     {Prefix.U}
-// ]
 
 /// This impl block contains the logic of the auto-detect feature.
 impl SchemeType {
-    /// Autodetect the scheme used in `sequences`. Note that function is has to parse the input, so
-    /// the longer the input, the longer this function will take. It might be better to give it a
-    /// relatively small sample.
-    /// auto_detect supports the following schemes:
+    /// Autodetect the scheme used in `sequences`. Note that this function has to parse the input,
+    /// so the longer the input, the longer this function will take. It might be better to give it
+    /// a relatively small sample and to call only once. This function cannot return a false
+    /// positive.
+    ///
+    /// `try_auto_detect` supports the following
+    /// schemes:
     /// - IOB2
     /// - IOE2
     /// - IOBES
